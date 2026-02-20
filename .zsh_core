@@ -1,6 +1,8 @@
 autoload -Uz compinit
 compinit
 
+export STARSHIP_CONFIG=~/.zsh/starship.toml
+
 # Enable persistent history
 export HISTFILE=~/.zsh_history
 export HISTSIZE=100000
