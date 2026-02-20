@@ -28,5 +28,6 @@ These tools are used by the config and must be installed separately. See each pr
 | **git-spice** | Shell completion (`gs`); stacked branches | [git-spice install](https://abhinav.github.io/git-spice/start/install/) — e.g. `brew install git-spice` |
 | **Starship** | Shell prompt | [starship.rs](https://starship.rs/) — e.g. `brew install starship` |
 | **fzf** | Fuzzy finder; used by `fsb` branch picker | [fzf installation](https://github.com/junegunn/fzf#installation) — e.g. `brew install fzf` |
+| **nvm** | Node version manager (optional) | [nvm install](https://github.com/nvm-sh/nvm#installing-and-updating) — run the install script, then ensure your shell sources this config so nvm loads |
 
 After installing antidote, opening a new shell (or running `antidote load ~/.zsh/.zsh_plugins.txt`) will clone plugins and generate `.zsh_plugins.zsh`.
