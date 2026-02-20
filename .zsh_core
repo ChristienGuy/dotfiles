@@ -36,15 +36,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# PHP (optional; adjust or remove if not using Herd)
-export PHP_INI_SCAN_DIR="${HOME}/.config/herd-lite/bin:${PHP_INI_SCAN_DIR}"
-
-# PYENV
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-# Optional: pin a specific Python version on PATH (edit or remove if not needed)
-[[ -d "$PYENV_ROOT/versions/2.7.18/bin" ]] && PATH="$PYENV_ROOT/versions/2.7.18/bin:$PATH"
-
 # Substring history search 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
