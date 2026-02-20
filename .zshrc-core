@@ -1,0 +1,62 @@
+autoload -Uz compinit
+compinit
+
+# Enable persistent history
+export HISTFILE=~/.zsh_history
+export HISTSIZE=100000
+export SAVEHIST=100000
+setopt APPEND_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt INC_APPEND_HISTORY
+
+# Starship
+eval "$(starship init zsh)"
+
+# Antidote
+source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
+antidote load
+
+# VSCODE aliases
+alias cod='code .'
+alias curs='cursor .'
+
+# Aliases for finding and removing untracked branches
+alias git-list-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}"'
+alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}" | xargs git branch -D'
+
+# git-spice
+eval "$(gs shell completion zsh)"
+
+# Interactive rebase to sign all commits in the named branch
+function grb-sign() {
+	local branch=$1
+	if [ -z "$branch" ]; then
+		branch=$(git branch --show-current)
+	fi
+	git rebase $branch --exec 'git commit --amend --no-edit -n -S'
+}
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# PDL completion
+# autoload -U compinit && compinit
+# autoload -U bashcompinit && bashcompinitexport PATH="/Users/christien.guy/.config/herd-lite/bin:$PATH"
+
+# PHP
+export PHP_INI_SCAN_DIR="/Users/christien.guy/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
+
+# PYENV
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+
+PATH="/Users/christien.guy/.pyenv/versions/2.7.18/bin:$PATH"
+
+# Substring history search 
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+# git fuzzy search
+alias fsb='git branch | fzf | xargs git checkout'
