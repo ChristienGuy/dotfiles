@@ -21,6 +21,9 @@ antidote load ~/.zsh/.zsh_plugins.txt
 # Aliases
 source ~/.zsh/.zsh_aliases
 
+# Functions (fzf git, etc.)
+source ~/.zsh/.zsh_functions
+
 # git-spice
 eval "$(gs shell completion zsh)"
 

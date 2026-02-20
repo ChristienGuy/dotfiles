@@ -1,0 +1,16 @@
+# Git fzf — shared layout/style and preview (arrays so each option is one argument)
+_fzf_git_branch_opts=(--layout=reverse --padding=1,2 --color="bg+:#2e2a62")
+_fzf_git_branch_preview='trunk=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed "s|^origin/||" || echo main); git diff --stat --color=always $trunk..$(echo {} | sed "s/^[* ]*//")'
+_fzf_git_preview_opts=(--preview-window=down:70%)
+
+function fsb() {
+  local selected
+  selected=$(git branch --no-color | fzf "${_fzf_git_branch_opts[@]}" "${_fzf_git_preview_opts[@]}" --preview="$_fzf_git_branch_preview") || return
+  git checkout "$(echo "$selected" | sed 's/^[* ]*//')"
+}
+
+function fsbd() {
+  local selected
+  selected=$(git branch --no-color | fzf -m "${_fzf_git_branch_opts[@]}" "${_fzf_git_preview_opts[@]}" --preview="$_fzf_git_branch_preview") || return
+  echo "$selected" | sed 's/^[* ]*//' | xargs -I {} git branch -D {}
+}

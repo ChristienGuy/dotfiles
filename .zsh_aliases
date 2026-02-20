@@ -5,19 +5,3 @@ alias curs='cursor .'
 # Git branch helpers
 alias git-list-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}"'
 alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}" | xargs git branch -D'
-
-# Git fzf aliases
-# Preview: strip leading "* " or "  " from branch line, then show last 20 commits
-alias fsb='git branch --no-color \
-| fzf \
---layout reverse \
---border \
---preview "git log --oneline -10 --color=always \$(echo {} | sed \"s/^[* ]*//\")" \
-| xargs git checkout'
-
-alias fsbd='git branch --no-color | \
-fzf -m \
---layout reverse \
---border \
---preview "git log --oneline -10 --color=always \$(echo {} | sed \"s/^[* ]*//\")" \
-| xargs -I {} git branch -D "{}"'
