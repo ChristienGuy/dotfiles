@@ -14,7 +14,7 @@ eval "$(starship init zsh)"
 
 # Antidote
 source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
-antidote load
+antidote load ~/.zsh/.zsh_plugins.txt
 
 # VSCODE aliases
 alias cod='code .'
