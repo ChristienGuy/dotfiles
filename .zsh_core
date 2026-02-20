@@ -16,13 +16,8 @@ eval "$(starship init zsh)"
 source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load ~/.zsh/.zsh_plugins.txt
 
-# VSCODE aliases
-alias cod='code .'
-alias curs='cursor .'
-
-# Aliases for finding and removing untracked branches
-alias git-list-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}"'
-alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}" | xargs git branch -D'
+# Aliases
+[ -f ~/.zsh/.zsh_aliases ] && source ~/.zsh/.zsh_aliases
 
 # git-spice
 eval "$(gs shell completion zsh)"
@@ -57,6 +52,3 @@ PATH="/Users/christien.guy/.pyenv/versions/2.7.18/bin:$PATH"
 # Substring history search 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-
-# git fuzzy search
-alias fsb='git branch | fzf | xargs git checkout'
