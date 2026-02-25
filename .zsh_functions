@@ -14,3 +14,27 @@ function fsbd() {
   selected=$(git branch --no-color | fzf -m "${_fzf_git_branch_opts[@]}" "${_fzf_git_preview_opts[@]}" --preview="$_fzf_git_branch_preview") || return
   echo "$selected" | sed 's/^[* ]*//' | xargs -I {} git branch -D {}
 }
+
+# Search through patch lines (code changes); optional path(s). Preview = full commit, Enter = commit summary.
+# Usage: fslog [path ...]. No path = all files. Search is over diff lines, not commit messages.
+function fslog() {
+  local tab=$'\t'
+  local log_cmd=(git log -p --all)
+  (( $# )) && log_cmd+=(-- "$@")
+
+  # Prefix each line with current commit hash so fzf preview and selection can use it
+  local awk_prefix='BEGIN { OFS = "\t" } /^commit / { hash = $2 } { print hash, $0 }'
+  local preview_cmd='git show $(echo {} | cut -f1) --color=always'
+
+  local selected
+  selected=$("${log_cmd[@]}" 2>/dev/null | awk "$awk_prefix" |
+    fzf "${_fzf_git_branch_opts[@]}" "${_fzf_git_preview_opts[@]}" \
+      --delimiter="$tab" --with-nth=2.. \
+      --preview="$preview_cmd") || return
+  [[ -z "$selected" ]] && return
+
+  local hash="${selected%%$tab*}"
+  git show -s --format='%h  %an  %ad' --date=short "$hash"
+  git name-rev --name-only "$hash" 2>/dev/null
+}
+
