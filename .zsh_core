@@ -2,6 +2,7 @@ autoload -Uz compinit
 compinit
 
 export STARSHIP_CONFIG=~/.zsh/starship.toml
+export EDITOR="cursor --wait"
 
 # Enable persistent history
 export HISTFILE=~/.zsh_history
