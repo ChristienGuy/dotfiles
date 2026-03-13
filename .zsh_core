@@ -27,6 +27,7 @@ source ~/.zsh/.zsh_functions
 
 # git-spice
 eval "$(gs shell completion zsh)"
+GIT_SPICE_NO_GS_WARNING=1
 
 # Interactive rebase to sign all commits in the named branch
 function grb-sign() {
