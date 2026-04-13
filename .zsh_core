@@ -15,6 +15,12 @@ setopt INC_APPEND_HISTORY
 # Starship
 eval "$(starship init zsh)"
 
+# fzf
+eval "$(fzf --zsh)"
+
+# zoxide
+eval "$(zoxide init zsh)"
+
 # Antidote
 source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load ~/.zsh/.zsh_plugins.txt
@@ -46,3 +52,6 @@ export NVM_DIR="$HOME/.nvm"
 # Substring history search 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+
+# Claude
+alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal /Users/christien.guy/.local/bin/claude"

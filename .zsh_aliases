@@ -2,6 +2,23 @@
 alias cod='code .'
 alias curs='cursor .'
 
+# Git (previously from OMZ git plugin)
+alias ga='git add'
+alias gaa='git add --all'
+alias gb='git branch'
+alias gba='git branch --all'
+alias gbd='git branch --delete'
+alias gc='git commit --verbose'
+alias gcb='git checkout -b'
+alias gco='git checkout'
+alias gcp='git cherry-pick'
+alias gd='git diff'
+alias gl='git pull'
+alias gm='git merge'
+alias gp='git push'
+alias grb='git rebase'
+alias gst='git status'
+
 # Git branch helpers
 alias git-list-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}"'
 alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}" | xargs git branch -D'
