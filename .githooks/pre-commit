@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+# Pre-commit hook: runs lint + tests before allowing commit
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+make check

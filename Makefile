@@ -2,7 +2,7 @@ SHELL := /bin/zsh
 
 ZTR_PATH := /opt/homebrew/share/zsh-test-runner/ztr.zsh
 SOURCE_FILES := .zsh_core .zsh_aliases .zsh_functions
-TEST_FILES := $(wildcard *.test.zsh)
+TEST_FILES := $(wildcard .*.test.zsh)
 
 .PHONY: lint test check
 
@@ -19,7 +19,7 @@ test:
 	@fail=0; \
 	for f in $(TEST_FILES); do \
 		echo "--- $$f ---"; \
-		zsh -c 'source $(ZTR_PATH) && source "'"$$f"'" && ztr summary' || fail=1; \
+		zsh -c 'source $(ZTR_PATH) && source "'"$$f"'"' || fail=1; \
 		echo; \
 	done; \
 	exit $$fail
