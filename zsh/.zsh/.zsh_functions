@@ -38,3 +38,9 @@ function fslog() {
   git name-rev --name-only "$hash" 2>/dev/null
 }
 
+# Run claude inside the claude-personal sbx sandbox.
+# sbx already runs claude in bypass-permissions mode — the microVM is the blast radius.
+function csbx() {
+  sbx run --template claude-personal:latest claude "$@"
+}
+

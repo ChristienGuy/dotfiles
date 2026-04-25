@@ -9,7 +9,7 @@ ZSH_DIR := zsh/.zsh
 SOURCE_FILES := $(ZSH_DIR)/.zsh_core $(ZSH_DIR)/.zsh_aliases $(ZSH_DIR)/.zsh_functions
 TEST_FILES := $(wildcard $(ZSH_DIR)/.*.test.zsh)
 
-.PHONY: help install uninstall restow lint test check
+.PHONY: help install uninstall restow lint test check sbx
 
 help:
 	@echo "Usage:"
@@ -21,6 +21,7 @@ help:
 	@echo "  make lint              zsh -n syntax check on source files"
 	@echo "  make test              Run ztr tests"
 	@echo "  make check             lint + test"
+	@echo "  make sbx               Build the claude-personal sbx image"
 	@echo ""
 	@echo "Packages: $(PACKAGES)"
 
@@ -67,3 +68,6 @@ test:
 	exit $$fail
 
 check: lint test
+
+sbx:
+	@sbx/claude-personal/build.sh

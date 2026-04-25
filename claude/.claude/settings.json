@@ -37,5 +37,8 @@
   },
   "extraKnownMarketplaces": {},
   "effortLevel": "high",
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "auto"
+  }
 }

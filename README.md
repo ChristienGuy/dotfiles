@@ -28,6 +28,23 @@ Global Claude Code config. Per-project state, sessions, history, and plugins are
 ### `starship/`
 Starship prompt config at the default location (`~/.config/starship.toml`).
 
+## Non-stow: `sbx/`
+
+Docker Sandbox ([sbx](https://docs.docker.com/ai/sandboxes/)) templates. Not a stow package — these build Docker images rather than symlinking into `$HOME`.
+
+### `sbx/claude-personal/`
+
+Builds `claude-personal:latest`, a sandbox image that runs Claude Code against `~/.claude-personal`. sbx already launches claude in bypass-permissions mode — the microVM is the blast radius.
+
+```bash
+make sbx                                            # rebuild + load image into sbx
+cd ~/some/project
+csbx                                                # zsh function, see zsh/.zsh/.zsh_functions
+# or: sbx run --template claude-personal:latest claude
+```
+
+`build.sh` uses an **allowlist** — only `settings.json`, `CLAUDE.md`, `keybindings.json`, `statusline-command.sh`, `agents/`, `commands/`, `hooks/`, `skills/`, `plugins/` get baked in. Credentials, sessions, history, caches, and project state are excluded. Rebuild after changing any of those.
+
 ## Install (new machine)
 
 ```bash

@@ -25,5 +25,13 @@ claude/.claude/policy-limits.json
 claude/.claude/remote-settings.json
 claude/.claude/security_warnings_state_*.json
 
+# sbx — build snapshots (contain ~/.claude-personal data)
+sbx/**/snapshot/
+
+# sbx — paranoia: never commit credentials into the build context
+sbx/**/.credentials.json
+sbx/**/.claude.json
+sbx/**/settings.local.json
+
 # Editor/OS junk
 .DS_Store
