@@ -13,9 +13,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
 
 # git-spice (`gs`) — pinned. Bump GS_VERSION explicitly when upgrading.
 # Auth piggybacks on `gh` (already in the base image), so no token baked in.
+# openssh-client is installed here too: needed for git-over-SSH against
+# github.com. The private key itself is injected at runtime, never baked
+# into the image — see dotfiles/sbx/inject-ssh.sh.
 ARG GS_VERSION=v0.26.1
 RUN apt-get update \
- && apt-get install -y --no-install-recommends bash-completion \
+ && apt-get install -y --no-install-recommends bash-completion openssh-client \
  && rm -rf /var/lib/apt/lists/* \
  && case "$(uname -m)" in \
         aarch64) GS_ARCH=aarch64 ;; \
