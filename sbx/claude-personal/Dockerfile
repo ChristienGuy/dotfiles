@@ -33,6 +33,23 @@ RUN apt-get update \
  && gs --version \
  && gs shell completion bash > /etc/bash_completion.d/gs
 
+# gh — install from GitHub's official apt repo (cli.github.com). The base
+# image ships gh 2.46.0, which fails on `gh pr edit` because of a GraphQL
+# deprecation warning for repository.pullRequest.projectCards (fixed in
+# 2.47+). Floating version: future rebuilds pick up new releases.
+RUN (type -p wget >/dev/null || (apt-get update && apt-get install -y --no-install-recommends wget)) \
+ && mkdir -p -m 755 /etc/apt/keyrings \
+ && out=$(mktemp) \
+ && wget -nv -O"$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+ && cat "$out" > /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends gh \
+ && rm -rf /var/lib/apt/lists/* \
+ && gh --version
+
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null \
  && npm install -g @anthropic-ai/claude-code@latest \
  && rm -rf /home/agent/.local/share/claude/versions \
