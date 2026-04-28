@@ -22,6 +22,9 @@ remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty
 five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
 week_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 
+# Session cost (USD)
+cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
+
 # Build output parts
 parts=()
 
@@ -51,6 +54,11 @@ if [ -n "$remaining" ]; then
     color='\033[0;32m'  # green when healthy
   fi
   parts+=("$(printf "${color}ctx:%d%%\033[0m" "$remaining_int")")
+fi
+
+# Session cost
+if [ -n "$cost" ]; then
+  parts+=("$(printf '\033[1;32m$%.2f\033[0m' "$cost")")
 fi
 
 # Rate limits

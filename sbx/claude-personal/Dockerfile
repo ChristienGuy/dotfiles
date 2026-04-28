@@ -50,6 +50,36 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install -y --no-insta
  && rm -rf /var/lib/apt/lists/* \
  && gh --version
 
+# rtk (Rust Token Killer) — pinned. Bump RTK_VERSION explicitly when upgrading.
+# CLI proxy that compresses common dev command output before it reaches Claude's
+# context. Hook entry (`rtk hook claude`) lives in the snapshot's settings.json,
+# so this just needs to put `rtk` on PATH. Asymmetric Linux asset naming:
+# musl on x86_64, gnu on aarch64.
+ARG RTK_VERSION=v0.37.2
+RUN case "$(uname -m)" in \
+        aarch64) RTK_ASSET=rtk-aarch64-unknown-linux-gnu.tar.gz ;; \
+        x86_64)  RTK_ASSET=rtk-x86_64-unknown-linux-musl.tar.gz ;; \
+        *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;; \
+    esac \
+ && tmpdir=$(mktemp -d) \
+ && curl -fsSL "https://github.com/rtk-ai/rtk/releases/download/${RTK_VERSION}/${RTK_ASSET}" \
+        | tar -xz -C "$tmpdir" \
+ && install -m 0755 "$tmpdir/rtk" /usr/local/bin/rtk \
+ && rm -rf "$tmpdir" \
+ && rtk --version
+
+# Make git-spice reuse gh CLI's auth without prompting.
+# Stores {"type":"gh"} in a file-based stash (skipping the keyring,
+# which isn't available in container sandboxes). gs will then shell
+# out to `gh auth token` on every API call, so token rotation in gh
+# propagates automatically. Requires gh CLI to be authenticated at
+# runtime — typically via GH_TOKEN env var injected by the sandbox.
+RUN git config --system spice.secret.backend file \
+ && mkdir -p /home/agent/.config/git-spice \
+ && printf '%s' '{"https://github.com":{"token":"{\"type\":\"gh\"}"}}' \
+      > /home/agent/.config/git-spice/secrets.json \
+ && chown -R agent:agent /home/agent/.config
+
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null \
  && npm install -g @anthropic-ai/claude-code@latest \
  && rm -rf /home/agent/.local/share/claude/versions \

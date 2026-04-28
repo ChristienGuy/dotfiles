@@ -19,6 +19,7 @@ fi
 ALLOW=(
   settings.json
   CLAUDE.md
+  RTK.md
   keybindings.json
   statusline-command.sh
   agents
