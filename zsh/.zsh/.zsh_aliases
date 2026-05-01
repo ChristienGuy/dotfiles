@@ -26,3 +26,8 @@ alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1
 
 # Git spice
 alias gs='git-spice'
+
+# sbx — spin up a sandboxed claude session against either config flavor.
+# Build images with `make sbx-personal` / `make sbx-work` first.
+alias sbx-personal='sbx run --template claude-personal:latest claude'
+alias sbx-work='sbx run --template claude-work:latest claude'

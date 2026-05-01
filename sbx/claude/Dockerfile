@@ -14,11 +14,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
 # git-spice (`gs`) — pinned. Bump GS_VERSION explicitly when upgrading.
 # Auth piggybacks on `gh` (already in the base image), so no token baked in.
 # openssh-client is installed here too: needed for git-over-SSH against
-# github.com. The private key itself is injected at runtime, never baked
-# into the image — see dotfiles/sbx/inject-ssh.sh.
+# github.com. sbx >=0.28 forwards the host SSH agent into the sandbox
+# automatically (via SSH_AUTH_SOCK), so no key material ever enters the image.
 ARG GS_VERSION=v0.26.1
 RUN apt-get update \
  && apt-get install -y --no-install-recommends bash-completion openssh-client \
+      fonts-dejavu fonts-liberation fontconfig \
+ && mkdir -p /etc/ssh/ssh_config.d \
+ && printf 'Host github.com\n  User git\n  StrictHostKeyChecking accept-new\n' \
+      > /etc/ssh/ssh_config.d/github.conf \
  && rm -rf /var/lib/apt/lists/* \
  && case "$(uname -m)" in \
         aarch64) GS_ARCH=aarch64 ;; \
@@ -80,20 +84,55 @@ RUN git config --system spice.secret.backend file \
       > /home/agent/.config/git-spice/secrets.json \
  && chown -R agent:agent /home/agent/.config
 
-RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null \
- && npm install -g @anthropic-ai/claude-code@latest \
- && rm -rf /home/agent/.local/share/claude/versions \
- && ln -sf /usr/local/share/npm-global/bin/claude /home/agent/.local/bin/claude
+# pnpm: move the content-addressable store off the virtiofs-mounted source
+# tree and force copy mode. esbuild's Go-based readdir intermittently misses
+# hardlinked entries on virtiofs (node sees them, esbuild doesn't), which
+# breaks vite/vitest optimizeDeps for any package whose dist/*.mjs files
+# cross-import each other. Putting the store on container-local storage means
+# pnpm copies into node_modules/.pnpm by default (cross-fs); package-import-method=copy
+# is belt-and-suspenders so even same-fs installs don't hardlink. Baked into
+# the agent user's ~/.npmrc since /etc/npmrc isn't a config path npm/pnpm
+# read by default (the global path is $PREFIX/etc/npmrc).
+RUN install -d -o agent -g agent /home/agent \
+ && printf 'store-dir=/home/agent/.local/share/pnpm/store\npackage-import-method=copy\n' \
+        > /home/agent/.npmrc \
+ && chown agent:agent /home/agent/.npmrc
+
+# claude-code — pinned. Bump CLAUDE_CODE_VERSION explicitly when upgrading.
+# Native installer only (~/.local/bin/claude). `npm install -g` would create a
+# parallel root-owned install that `claude doctor` flags as a duplicate and
+# that the agent user can't auto-update. Pinning the version arg is both
+# deterministic and bust-on-bump (Docker layer caching otherwise sticks to
+# whatever was pulled the first time the layer was built).
+ARG CLAUDE_CODE_VERSION=2.1.121
+RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null
 
 USER agent
 
-ENV CLAUDE_CONFIG_DIR=/home/agent/.claude-personal
+# Native installer stages the binary at ~/.local/bin/claude with versioned
+# copies under ~/.local/share/claude/versions. Runs as `agent` so $HOME
+# resolves to /home/agent.
+RUN curl -fsSL https://claude.ai/install.sh | bash -s -- "${CLAUDE_CODE_VERSION}"
 
-COPY --chown=agent:agent snapshot/ /home/agent/.claude-personal/
+# Ensure ~/.local/bin wins over /usr/local/share/npm-global/bin so `which claude`
+# always resolves to the native install. Without this, the base image's PATH
+# finds the npm-global path first.
+ENV PATH=/home/agent/.local/bin:$PATH
 
-RUN chmod +x /home/agent/.claude-personal/statusline-command.sh \
+# In-VM Claude config dir name (e.g. ".claude-personal" or ".claude-work").
+# Drives both CLAUDE_CONFIG_DIR and the COPY destination. NOTE: do NOT use
+# bare ".claude" here — sbx's claude-code template treats /home/agent/.claude/
+# as its own managed directory and rewrites settings.json on first run,
+# which silently strips our baked statusLine/hooks/plugins. build.sh sets this
+# (.claude-personal for personal, .claude-work for work).
+ARG CLAUDE_CONFIG_DIR_NAME=.claude-personal
+ENV CLAUDE_CONFIG_DIR=/home/agent/${CLAUDE_CONFIG_DIR_NAME}
+
+COPY --chown=agent:agent snapshot/ /home/agent/${CLAUDE_CONFIG_DIR_NAME}/
+
+RUN chmod +x ${CLAUDE_CONFIG_DIR}/statusline-command.sh \
  && mkdir -p /home/agent/.config \
- && if [ -f /home/agent/.claude-personal/starship.toml ]; then \
-        mv /home/agent/.claude-personal/starship.toml /home/agent/.config/starship.toml; \
+ && if [ -f ${CLAUDE_CONFIG_DIR}/starship.toml ]; then \
+        mv ${CLAUDE_CONFIG_DIR}/starship.toml /home/agent/.config/starship.toml; \
     fi \
  && echo 'eval "$(starship init bash)"' >> /home/agent/.bashrc
