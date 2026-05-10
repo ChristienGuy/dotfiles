@@ -15,70 +15,113 @@ fi
 # Model display name
 model=$(echo "$input" | jq -r '.model.display_name // ""')
 
-# Context remaining percentage
-remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
+# Context window
+ctx_used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
+ctx_window_size=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
 
-# Rate limits (5-hour and 7-day)
+# Rate limits (5-hour and 7-day) — used percentages
 five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
 week_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 
 # Session cost (USD)
 cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
 
-# Build output parts
-parts=()
+# Format token count: 1234 -> "1.2k", 1500000 -> "1.5M"
+format_tokens() {
+  awk -v n="$1" 'BEGIN {
+    if (n >= 1000000) printf "%.1fM", n/1000000
+    else if (n >= 1000)  printf "%.1fk", n/1000
+    else                 printf "%d", n
+  }'
+}
 
-# Directory segment (cyan)
-if [ -n "$dir" ]; then
-  parts+=("$(printf '\033[0;36m%s\033[0m' "$dir")")
-fi
+# Render a 10-wide progress bar for a 0-100 percentage: [===.......]
+progress_bar() {
+  local pct="$1" width=10 filled bar="" i
+  filled=$(awk -v p="$pct" -v w="$width" 'BEGIN {
+    f=int(p*w/100 + 0.5); if (f>w) f=w; if (f<0) f=0; print f
+  }')
+  for ((i=0; i<filled;  i++)); do bar+="="; done
+  for ((i=filled; i<width; i++)); do bar+="."; done
+  printf '[%s]' "$bar"
+}
 
-# Git branch segment (magenta)
-if [ -n "$branch" ]; then
-  parts+=("$(printf '\033[0;35m\xef\x90\x98 %s\033[0m' "$branch")")
-fi
-
-# Model segment (blue)
-if [ -n "$model" ]; then
-  parts+=("$(printf '\033[0;34m%s\033[0m' "$model")")
-fi
-
-# Context remaining
-if [ -n "$remaining" ]; then
-  remaining_int=$(printf '%.0f' "$remaining")
-  if [ "$remaining_int" -le 20 ]; then
-    color='\033[0;31m'  # red when low
-  elif [ "$remaining_int" -le 40 ]; then
-    color='\033[0;33m'  # yellow when moderate
-  else
-    color='\033[0;32m'  # green when healthy
+# Color for a "used" metric (higher = worse)
+used_color() {
+  local pct_int="$1"
+  if   [ "$pct_int" -ge 80 ]; then printf '\033[0;31m'   # red
+  elif [ "$pct_int" -ge 60 ]; then printf '\033[0;33m'   # yellow
+  else                             printf '\033[0;32m'   # green
   fi
-  parts+=("$(printf "${color}ctx:%d%%\033[0m" "$remaining_int")")
-fi
+}
 
-# Session cost
-if [ -n "$cost" ]; then
-  parts+=("$(printf '\033[1;32m$%.2f\033[0m' "$cost")")
-fi
-
-# Rate limits
-rate_parts=()
-[ -n "$five_pct" ] && rate_parts+=("$(printf '5h:%.0f%%' "$five_pct")")
-[ -n "$week_pct" ] && rate_parts+=("$(printf '7d:%.0f%%' "$week_pct")")
-if [ ${#rate_parts[@]} -gt 0 ]; then
-  rate_str=$(IFS=' '; echo "${rate_parts[*]}")
-  parts+=("$(printf '\033[0;33m%s\033[0m' "$rate_str")")
-fi
-
-# Join with separator
-if [ ${#parts[@]} -gt 0 ]; then
-  result=""
-  for i in "${!parts[@]}"; do
-    if [ $i -eq 0 ]; then
-      result="${parts[$i]}"
+# Join all positional args with a dim pipe separator
+join_segments() {
+  local sep result="" i first=1
+  sep=$(printf '\033[0;90m|\033[0m')
+  for seg in "$@"; do
+    if [ $first -eq 1 ]; then
+      result="$seg"
+      first=0
     else
-      result="$result $(printf '\033[0;90m|\033[0m') ${parts[$i]}"
+      result="$result $sep $seg"
     fi
   done
   printf '%s' "$result"
+}
+
+# Line 1: identity (dir, branch, model, cost)
+line1=()
+
+if [ -n "$dir" ]; then
+  line1+=("$(printf '\033[0;36m%s\033[0m' "$dir")")
+fi
+
+if [ -n "$branch" ]; then
+  line1+=("$(printf '\033[0;35m\xef\x90\x98 %s\033[0m' "$branch")")
+fi
+
+if [ -n "$model" ]; then
+  line1+=("$(printf '\033[0;34m%s\033[0m' "$model")")
+fi
+
+if [ -n "$cost" ]; then
+  line1+=("$(printf '\033[1;32m$%.2f\033[0m' "$cost")")
+fi
+
+# Line 2: usage bars (context, 5h rate, 7d rate)
+line2=()
+
+if [ -n "$ctx_used_pct" ] && [ -n "$ctx_window_size" ]; then
+  tokens_used=$(awk -v p="$ctx_used_pct" -v s="$ctx_window_size" 'BEGIN { printf "%d", p*s/100 }')
+  tokens_str=$(format_tokens "$tokens_used")
+  bar=$(progress_bar "$ctx_used_pct")
+  pct_int=$(printf '%.0f' "$ctx_used_pct")
+  color=$(used_color "$pct_int")
+  line2+=("$(printf "%b%s %s %d%%\033[0m" "$color" "$tokens_str" "$bar" "$pct_int")")
+fi
+
+if [ -n "$five_pct" ]; then
+  bar=$(progress_bar "$five_pct")
+  pct_int=$(printf '%.0f' "$five_pct")
+  color=$(used_color "$pct_int")
+  line2+=("$(printf "%b5h %s %d%%\033[0m" "$color" "$bar" "$pct_int")")
+fi
+
+if [ -n "$week_pct" ]; then
+  bar=$(progress_bar "$week_pct")
+  pct_int=$(printf '%.0f' "$week_pct")
+  color=$(used_color "$pct_int")
+  line2+=("$(printf "%b7d %s %d%%\033[0m" "$color" "$bar" "$pct_int")")
+fi
+
+# Emit both rows; only newline between them when both have content
+if [ ${#line1[@]} -gt 0 ]; then
+  join_segments "${line1[@]}"
+fi
+if [ ${#line1[@]} -gt 0 ] && [ ${#line2[@]} -gt 0 ]; then
+  printf '\n'
+fi
+if [ ${#line2[@]} -gt 0 ]; then
+  join_segments "${line2[@]}"
 fi
