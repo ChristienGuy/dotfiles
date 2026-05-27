@@ -26,6 +26,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/.claude-personal/hooks/enforce-ssh.sh"
+          },
+          {
+            "type": "command",
             "command": "rtk hook claude"
           }
         ]

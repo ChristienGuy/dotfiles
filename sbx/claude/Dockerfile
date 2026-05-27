@@ -84,6 +84,23 @@ RUN git config --system spice.secret.backend file \
       > /home/agent/.config/git-spice/secrets.json \
  && chown -R agent:agent /home/agent/.config
 
+# git-spice reads GITHUB_TOKEN; the sandbox proxy provides GH_TOKEN. Aliasing
+# them in /etc/sandbox-persistent.sh (sourced via CLAUDE_ENV_FILE before every
+# Bash tool call, and re-exported as BASH_ENV for non-interactive children)
+# makes `gs auth status`, `gs repo sync`, `gs branch submit`, etc. work without
+# a manual `gs auth login` per sandbox.
+RUN printf '\n# git-spice reads GITHUB_TOKEN; the sandbox proxy provides GH_TOKEN.\nexport GITHUB_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}"\n' \
+      >> /etc/sandbox-persistent.sh
+
+# Global git pre-push hook: reject pushes targeting main/master.
+# Uses core.hooksPath so every repo in the sandbox inherits the guard without
+# needing per-repo .git/hooks setup.
+RUN mkdir -p /etc/git/hooks \
+ && printf '#!/bin/sh\nwhile read local_ref local_sha remote_ref remote_sha; do\n  case "$remote_ref" in\n    refs/heads/main|refs/heads/master)\n      echo "pre-push: refusing to push to $remote_ref" >&2\n      exit 1\n      ;;\n  esac\ndone\n' \
+      > /etc/git/hooks/pre-push \
+ && chmod +x /etc/git/hooks/pre-push \
+ && git config --system core.hooksPath /etc/git/hooks
+
 # pnpm: move the content-addressable store off the virtiofs-mounted source
 # tree and force copy mode. esbuild's Go-based readdir intermittently misses
 # hardlinked entries on virtiofs (node sees them, esbuild doesn't), which
@@ -98,13 +115,22 @@ RUN install -d -o agent -g agent /home/agent \
         > /home/agent/.npmrc \
  && chown agent:agent /home/agent/.npmrc
 
+# Force polling-based file watchers for Node/Expo/Metro dev servers running
+# against virtiofs-bind-mounted workspaces. Editor atomic-replace saves on the
+# host change the underlying inode; native fsnotify across virtiofs misses
+# these events. Polling is the boring reliable answer (~2-5% CPU). Disabling
+# watchman avoids it racing the polling watcher and reporting stale state.
+ENV CHOKIDAR_USEPOLLING=true
+ENV CHOKIDAR_INTERVAL=400
+ENV WATCHMAN_DISABLE=1
+
 # claude-code — pinned. Bump CLAUDE_CODE_VERSION explicitly when upgrading.
 # Native installer only (~/.local/bin/claude). `npm install -g` would create a
 # parallel root-owned install that `claude doctor` flags as a duplicate and
 # that the agent user can't auto-update. Pinning the version arg is both
 # deterministic and bust-on-bump (Docker layer caching otherwise sticks to
 # whatever was pulled the first time the layer was built).
-ARG CLAUDE_CODE_VERSION=2.1.121
+ARG CLAUDE_CODE_VERSION=2.1.142
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null
 
 USER agent

@@ -38,9 +38,18 @@
     "sentry@claude-plugins-official": true,
     "github@claude-plugins-official": true,
     "notion@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true
+    "claude-md-management@claude-plugins-official": true,
+    "paddle-shared@paddle-claude-plugin-marketplace": true
   },
-  "extraKnownMarketplaces": {},
+  "extraKnownMarketplaces": {
+    "paddle-claude-plugin-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "PaddleHQ/paddle-claude-plugin-marketplace"
+      },
+      "autoUpdate": true
+    }
+  },
   "effortLevel": "high",
   "skipAutoPermissionPrompt": true
 }

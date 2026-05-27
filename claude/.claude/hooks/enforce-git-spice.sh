@@ -27,4 +27,17 @@ if echo "$COMMAND" | grep -qE '\bgit\s+push\b'; then
   exit 2
 fi
 
+# Block mutations to the `origin` remote. Catches `git remote set-url|add|remove|rm|rename ... origin ...`
+# in either argument position (e.g. `rename foo origin` as well as `rename origin foo`).
+if echo "$COMMAND" | grep -qE '\bgit\s+remote\s+(set-url|add|remove|rm|rename)\b[^|;&]*\borigin\b'; then
+  echo "BLOCKED: Refusing to modify the \`origin\` remote (set-url/add/remove/rename). If this is intentional, run the command yourself." >&2
+  exit 2
+fi
+
+# Block `git config` writes targeting remote.origin.* (covers set, --unset, --add, --replace-all).
+if echo "$COMMAND" | grep -qE '\bgit\s+config\b[^|;&]*\bremote\.origin\.'; then
+  echo "BLOCKED: Refusing to modify \`remote.origin.*\` via git config. If this is intentional, run the command yourself." >&2
+  exit 2
+fi
+
 exit 0

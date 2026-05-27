@@ -24,3 +24,22 @@ Always confirm the issue title/description with me before creating it.
 - Creating a **new** PR → always use `gs branch submit --draft`.
 - Updating an **existing** PR (pushing review fixes, rebases, additional commits) → use `gs branch submit` with **no** `--draft` flag. From git-spice's own help: "For updating Change Requests, use --[no-]draft to change its draft status. Without the flag, the draft status is not changed." Once I've marked a PR ready for review, passing `--draft` on later updates silently demotes it back to draft.
 - Only pass `--draft` on update if I explicitly ask to demote a ready PR back to draft.
+
+## Git / GitHub writing style
+
+Commit messages, PR titles, PR descriptions, and PR review comments are TERSE. Bias hard toward brevity and clarity over grammar. Fragments over full sentences. Bullets over paragraphs. Sacrifice articles, conjunctions, and hedging words to get a 30-line description down to 10.
+
+Skip:
+- Restating what the diff/files already show
+- Marketing-style prose ("Phase 1 of...", "mirroring the measurement-first pattern of...", "This unblocks...")
+- "Why" essays — one clause is usually enough. If the why is non-obvious, one sentence
+- Redundant ticket references beyond the standard ticket field at the top
+- Filler sections ("Heads-up", "Notes:", "Other considerations:") unless they have load-bearing content
+
+Keep:
+- The standard PR template structure (Tickets, Checklist, What, How to test)
+- Code identifiers in backticks (filenames, flags, function names)
+- One-line bullets that say what and where, not why
+- Section headers only when the section has >1 line of real content
+
+If a PR description is over ~15 lines of prose, it's almost certainly too long.
