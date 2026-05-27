@@ -72,6 +72,17 @@ RUN case "$(uname -m)" in \
  && rm -rf "$tmpdir" \
  && rtk --version
 
+# workos CLI — pinned. Bump WORKOS_VERSION explicitly when upgrading.
+# Used for AuthKit setup, org/user/role management, seed provisioning, and
+# SSO/directory-sync debugging. Auth: WORKOS_API_KEY env var for management
+# commands (no OAuth needed). The CLI auto-detects CLAUDE_CODE env and enters
+# agent mode (no interactive prompts). @napi-rs/keyring has no D-Bus in the
+# container, so --insecure-storage + ~/.workos/ file fallback is pre-staged.
+ARG WORKOS_VERSION=0.15.2
+RUN npm install -g "workos@${WORKOS_VERSION}" \
+ && workos --version \
+ && install -d -m 0700 -o agent -g agent /home/agent/.workos
+
 # Make git-spice reuse gh CLI's auth without prompting.
 # Stores {"type":"gh"} in a file-based stash (skipping the keyring,
 # which isn't available in container sandboxes). gs will then shell
@@ -90,6 +101,11 @@ RUN git config --system spice.secret.backend file \
 # makes `gs auth status`, `gs repo sync`, `gs branch submit`, etc. work without
 # a manual `gs auth login` per sandbox.
 RUN printf '\n# git-spice reads GITHUB_TOKEN; the sandbox proxy provides GH_TOKEN.\nexport GITHUB_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}"\n' \
+      >> /etc/sandbox-persistent.sh
+
+# workos CLI: forward WORKOS_API_KEY from host (if set) and force file-based
+# credential storage (no keyring in containers).
+RUN printf '\n# workos CLI: forward API key and force file-based credential storage.\nexport WORKOS_API_KEY="${WORKOS_API_KEY:-}"\n' \
       >> /etc/sandbox-persistent.sh
 
 # Global git pre-push hook: reject pushes targeting main/master.
