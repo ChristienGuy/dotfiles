@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Build the sbx image for one of the user's claude configs.
+# Build the sbx image for the user's claude config.
 #
-# Usage: build.sh [personal|work]   (default: personal)
+# Usage: build.sh
 #
-#   personal → ~/.claude-personal → image claude-personal:latest
-#   work     → ~/.claude           → image claude-work:latest
+#   ~/.claude-personal → image claude-personal:latest
 #
 # Uses an explicit allowlist of files/dirs to bake in — everything else
 # (credentials, sessions, history, caches, project state) stays out. Required
@@ -16,9 +15,6 @@ cd "$(dirname "$0")"
 
 # shellcheck source=lib.sh
 . ./lib.sh
-
-flavor="${1:-personal}"
-flavor_to_names "$flavor"
 
 DST="./snapshot"
 build_snapshot "$DST"

@@ -32,9 +32,11 @@ Starship prompt config at the default location (`~/.config/starship.toml`).
 
 Docker Sandbox ([sbx](https://docs.docker.com/ai/sandboxes/)) templates. Not a stow package — these build Docker images rather than symlinking into `$HOME`.
 
-### `sbx/claude-personal/`
+### `sbx/claude/`
 
 Builds `claude-personal:latest`, a sandbox image that runs Claude Code against `~/.claude-personal`. sbx already launches claude in bypass-permissions mode — the microVM is the blast radius.
+
+Personal-only on purpose: sbx resolves Anthropic auth through one global OAuth slot shared by every sandbox, so a separate "work" image can't hold its own login (last `/login` wins for all sandboxes). See `sbx/claude/AUTH.md`.
 
 ```bash
 make sbx                                            # rebuild + load image into sbx

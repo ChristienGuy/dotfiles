@@ -9,7 +9,7 @@ ZSH_DIR := zsh/.zsh
 SOURCE_FILES := $(ZSH_DIR)/.zsh_core $(ZSH_DIR)/.zsh_aliases $(ZSH_DIR)/.zsh_functions
 TEST_FILES := $(wildcard $(ZSH_DIR)/.*.test.zsh)
 
-.PHONY: help install uninstall restow lint test check sbx sbx-personal sbx-work
+.PHONY: help install uninstall restow lint test check sbx
 
 help:
 	@echo "Usage:"
@@ -21,9 +21,7 @@ help:
 	@echo "  make lint              zsh -n syntax check on source files"
 	@echo "  make test              Run ztr tests"
 	@echo "  make check             lint + test"
-	@echo "  make sbx-personal      Build the personal sbx image (~/.claude-personal)"
-	@echo "  make sbx-work          Build the work sbx image (~/.claude)"
-	@echo "  make sbx               Build both sbx images"
+	@echo "  make sbx               Build the sbx image (~/.claude-personal)"
 	@echo ""
 	@echo "Packages: $(PACKAGES)"
 
@@ -71,10 +69,5 @@ test:
 
 check: lint test
 
-sbx-personal:
-	@sbx/claude/build.sh personal
-
-sbx-work:
-	@sbx/claude/build.sh work
-
-sbx: sbx-personal sbx-work
+sbx:
+	@sbx/claude/build.sh

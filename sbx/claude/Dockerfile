@@ -161,12 +161,11 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s -- "${CLAUDE_CODE_VERSION}
 # finds the npm-global path first.
 ENV PATH=/home/agent/.local/bin:$PATH
 
-# In-VM Claude config dir name (e.g. ".claude-personal" or ".claude-work").
-# Drives both CLAUDE_CONFIG_DIR and the COPY destination. NOTE: do NOT use
-# bare ".claude" here — sbx's claude-code template treats /home/agent/.claude/
-# as its own managed directory and rewrites settings.json on first run,
-# which silently strips our baked statusLine/hooks/plugins. build.sh sets this
-# (.claude-personal for personal, .claude-work for work).
+# In-VM Claude config dir name (".claude-personal"). Drives both
+# CLAUDE_CONFIG_DIR and the COPY destination. NOTE: do NOT use bare ".claude"
+# here — sbx's claude-code template treats /home/agent/.claude/ as its own
+# managed directory and rewrites settings.json on first run, which silently
+# strips our baked statusLine/hooks/plugins. build.sh sets this via --build-arg.
 ARG CLAUDE_CONFIG_DIR_NAME=.claude-personal
 ENV CLAUDE_CONFIG_DIR=/home/agent/${CLAUDE_CONFIG_DIR_NAME}
 

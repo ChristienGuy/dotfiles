@@ -1,34 +1,16 @@
-# Shared helpers for build.sh and patch.sh.
+# Shared helpers for build.sh.
 # This file is meant to be sourced, not executed.
 
-# Map flavor → host_dir_name, vm_dir_name, image_name.
-# Sets globals; returns non-zero on unknown flavor.
-flavor_to_names() {
-  local flavor="$1"
-  case "$flavor" in
-    personal)
-      host_dir_name=".claude-personal"
-      vm_dir_name=".claude-personal"
-      image_name="claude-personal"
-      ;;
-    work)
-      # vm_dir_name MUST NOT be ".claude": sbx's claude-code template treats
-      # /home/agent/.claude/ as its own managed dir and rewrites settings.json
-      # on each boot, silently stripping our baked statusLine/hooks/plugins.
-      host_dir_name=".claude"
-      vm_dir_name=".claude-work"
-      image_name="claude-work"
-      ;;
-    *)
-      echo "unknown flavor: $flavor (want personal|work)" >&2
-      return 1
-      ;;
-  esac
-}
+# Config names, baked in. The sandbox runs Claude Code against ~/.claude-personal.
+#
+# vm_dir_name MUST NOT be ".claude": sbx's claude-code template treats
+# /home/agent/.claude/ as its own managed dir and rewrites settings.json on each
+# boot, silently stripping our baked statusLine/hooks/plugins.
+host_dir_name=".claude-personal"
+vm_dir_name=".claude-personal"
+image_name="claude-personal"
 
 # Build the snapshot tree at $1 from ~/$host_dir_name.
-# Caller must have run flavor_to_names first so $host_dir_name and $vm_dir_name
-# are set.
 build_snapshot() {
   local DST="$1"
   local SRC="$HOME/$host_dir_name"
@@ -38,7 +20,7 @@ build_snapshot() {
     return 1
   fi
 
-  # Items copied if present. Add new config items here as either flavor grows.
+  # Items copied if present. Add new config items here as the config grows.
   local ALLOW=(
     settings.json
     CLAUDE.md
@@ -97,10 +79,9 @@ build_snapshot() {
     cp -L "$STARSHIP_SRC" "$DST/starship.toml"
   fi
 
-  # Both settings.json files reference the host's
-  # /Users/<user>/.claude/statusline-command.sh path (personal's settings.json
-  # is a stow link to a file that hardcodes the work-style path). Rewrite to
-  # the in-VM path under whichever config dir this build is targeting.
+  # settings.json references the host's /Users/<user>/.claude/statusline-command.sh
+  # path (it's a stow link to a file that hardcodes that path). Rewrite to the
+  # in-VM path under the config dir.
   if [ -f "$DST/settings.json" ]; then
     sed -i '' \
       -e "s|/Users/[^/]*/\.claude/statusline-command\.sh|/home/agent/${vm_dir_name}/statusline-command.sh|g" \
@@ -110,9 +91,7 @@ build_snapshot() {
   # Plugin manifests record absolute installPaths under the host home. The
   # runtime bind-mounts /Users/<user>/projects/<workdir> as root:root, which
   # destroys any build-time symlink we'd put at /Users/<user>/<host_dir_name>.
-  # Rewrite the manifests to point directly at the in-VM location. Trailing
-  # slash on the search pattern keeps the .claude flavor from matching
-  # .claude-personal paths.
+  # Rewrite the manifests to point directly at the in-VM location.
   local f
   for f in "$DST/plugins/installed_plugins.json" "$DST/plugins/known_marketplaces.json"; do
     if [ -f "$f" ]; then
