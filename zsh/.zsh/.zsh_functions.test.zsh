@@ -9,6 +9,7 @@ ztr clear-summary
 ztr test '(( ${+functions[fsb]} ))' 'fsb function is defined'
 ztr test '(( ${+functions[fsbd]} ))' 'fsbd function is defined'
 ztr test '(( ${+functions[fslog]} ))' 'fslog function is defined'
+ztr test '(( ${+functions[dash:dev]} ))' 'dash:dev function is defined'
 
 # Shared FZF config variables are set
 ztr test '[[ -n "$_fzf_git_branch_preview" ]]' '_fzf_git_branch_preview is set'

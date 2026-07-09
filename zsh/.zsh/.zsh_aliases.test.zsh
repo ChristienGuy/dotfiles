@@ -30,5 +30,9 @@ ztr test '[[ "$(alias gpsup)" == *"git push --set-upstream"* ]]' 'gpsup alias de
 # Git spice
 ztr test '[[ "$(alias gs)" == *"git-spice"* ]]' 'gs alias points to git-spice'
 
+# Paddle deploys (pdl)
+ztr test '[[ "$(alias dash:take)" == *"pdl dashboard take development --app=billing-dashboard"* ]]' 'dash:take alias defined'
+ztr test '[[ "$(alias dash:prod)" == *"pdl dashboard deploy production --app=billing-dashboard --use-athena"* ]]' 'dash:prod alias defined'
+
 echo
 ztr summary

@@ -38,6 +38,15 @@ function fslog() {
   git name-rev --name-only "$hash" 2>/dev/null
 }
 
+# Deploy billing-dashboard to development via pdl.
+# No arg = current branch; pass a branch name to override.
+#   dash:dev
+#   dash:dev some-other-branch
+function dash:dev() {
+  local branch="${1:-$(git rev-parse --abbrev-ref HEAD)}"
+  pdl dashboard deploy development --app=billing-dashboard -b "$branch" --use-athena
+}
+
 # Run claude inside the claude-personal sbx sandbox.
 # sbx already runs claude in bypass-permissions mode — the microVM is the blast radius.
 function csbx() {

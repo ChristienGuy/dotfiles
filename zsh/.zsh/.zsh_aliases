@@ -27,6 +27,10 @@ alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1
 # Git spice
 alias gs='git-spice'
 
+# Paddle deploys (pdl) — billing-dashboard app. See dash:dev in .zsh_functions.
+alias dash:take='pdl dashboard take development --app=billing-dashboard'
+alias dash:prod='pdl dashboard deploy production --app=billing-dashboard --use-athena'
+
 # sbx — spin up a sandboxed claude session. Build the image with `make sbx` first.
 # See also the csbx function in .zsh_functions.
 alias sbx-personal='sbx run --template claude-personal:latest claude'
