@@ -21,9 +21,11 @@ Always confirm the issue title/description with me before creating it.
 
 ### PR draft status
 
-- Creating a **new** PR → always use `gs branch submit --draft`.
-- Updating an **existing** PR (pushing review fixes, rebases, additional commits) → use `gs branch submit` with **no** `--draft` flag. From git-spice's own help: "For updating Change Requests, use --[no-]draft to change its draft status. Without the flag, the draft status is not changed." Once I've marked a PR ready for review, passing `--draft` on later updates silently demotes it back to draft.
-- Only pass `--draft` on update if I explicitly ask to demote a ready PR back to draft.
+**Always run a plain `gs branch submit`. Never pass `--draft`, `--no-draft`, `--fill`, or `-c`.** (These are blocked by the enforce-git-spice hook.)
+
+- New PRs are created as draft automatically — this is enforced by config (`spice.submit.draft=true`), not by a flag.
+- A plain `gs branch submit` on an existing PR preserves its current draft/ready state. So once a PR is marked ready for review, updates keep it ready.
+- Do NOT decide about draft state per-call. If a PR's draft/ready state genuinely needs changing, ask me — I'll do it myself.
 
 ## Git / GitHub writing style
 

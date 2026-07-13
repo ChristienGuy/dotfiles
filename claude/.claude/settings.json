@@ -39,7 +39,11 @@
     "github@claude-plugins-official": true,
     "notion@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
-    "paddle-shared@paddle-claude-plugin-marketplace": true
+    "paddle-shared@paddle-claude-plugin-marketplace": true,
+    "honeycomb@honeycomb-plugins": true,
+    "amplitude@claude-plugins-official": true,
+    "paddle-frontend@paddle-claude-plugin-marketplace": true,
+    "paddle-go-backend@paddle-claude-plugin-marketplace": true
   },
   "extraKnownMarketplaces": {
     "paddle-claude-plugin-marketplace": {
@@ -51,6 +55,7 @@
     }
   },
   "effortLevel": "high",
-  "skipAutoPermissionPrompt": true,
-  "skipDangerousModePermissionPrompt": true
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true
 }

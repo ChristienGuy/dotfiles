@@ -5,7 +5,17 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
 
 # Block gh pr create — use gs branch submit instead
 if echo "$COMMAND" | grep -qE '\bgh\s+pr\s+create\b'; then
-  echo "BLOCKED: Use \`gs branch submit --draft\` to create PRs, not \`gh pr create\`. (--draft is for creating a new PR only; omit it when updating an existing PR so its current draft/ready state is preserved.)" >&2
+  echo "BLOCKED: Use \`gs branch submit\` to create PRs, not \`gh pr create\`. New PRs are draft automatically (spice.submit.draft=true); do NOT pass draft flags." >&2
+  exit 2
+fi
+
+# Block draft-state-changing flags on `gs branch submit`.
+# New PRs are draft by default via `spice.submit.draft=true`; a plain `gs branch submit`
+# on an existing PR preserves its current draft/ready state. Passing --draft/--no-draft/--fill/-c
+# overrides that and has repeatedly demoted human-set "ready" PRs back to draft. Never do it.
+# To intentionally change draft state, the human runs the flag themselves.
+if echo "$COMMAND" | grep -qE '\bgs\s+branch\s+submit\b' && echo "$COMMAND" | grep -qE '(--draft|--no-draft|--fill|[[:space:]]-c\b)'; then
+  echo "BLOCKED: Do not pass --draft/--no-draft/--fill/-c to \`gs branch submit\`. New PRs are draft via config; plain \`gs branch submit\` preserves the PR's existing state. Run a plain \`gs branch submit\`. If you truly need to change draft state, do it yourself." >&2
   exit 2
 fi
 
