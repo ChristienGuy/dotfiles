@@ -36,5 +36,6 @@
     "gopls-lsp@claude-plugins-official": true
   },
   "effortLevel": "high",
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "outputStyle": "Terse"
 }

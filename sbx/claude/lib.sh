@@ -32,6 +32,7 @@ build_snapshot() {
     hooks
     skills
     plugins
+    output-styles
   )
 
   # Items where missing-on-host means a broken sandbox — fail the build
@@ -43,6 +44,7 @@ build_snapshot() {
     CLAUDE.md
     statusline-command.sh
     plugins
+    output-styles
   )
 
   rm -rf "$DST"

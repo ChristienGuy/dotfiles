@@ -54,6 +54,7 @@
       "autoUpdate": true
     }
   },
+  "outputStyle": "Coworker",
   "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
