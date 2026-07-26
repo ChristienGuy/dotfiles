@@ -10,6 +10,40 @@ host_dir_name=".claude-personal"
 vm_dir_name=".claude-personal"
 image_name="claude-personal"
 
+# Release channel the sandbox's claude-code tracks. "latest" matches the host;
+# "stable" trails it by a few releases. Resolved to a concrete version at build
+# time — see resolve_claude_version.
+claude_channel="latest"
+claude_releases_url="https://downloads.claude.ai/claude-code-releases"
+
+# Resolve $claude_channel to a concrete X.Y.Z and echo it.
+#
+# The concrete version is passed to `docker build --build-arg`, which is what
+# makes rebuilds pick up new releases: baking a channel name into the Dockerfile
+# instead would let Docker cache the install layer forever and pin the image to
+# whatever it first pulled. A changing arg value busts that layer on its own.
+#
+# Failing hard matters here. Returning nothing would fall back to the
+# Dockerfile's ARG default and silently ship a stale claude — the exact bug this
+# replaced, where a hand-bumped pin sat 70 releases behind for two months.
+resolve_claude_version() {
+  local version
+
+  if ! version=$(curl -fsSL "$claude_releases_url/$claude_channel"); then
+    echo "error: could not reach $claude_releases_url/$claude_channel" >&2
+    return 1
+  fi
+
+  version="${version//[[:space:]]/}"
+
+  if ! [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][^[:space:]]+)?$ ]]; then
+    echo "error: '$claude_channel' resolved to '$version', not a version" >&2
+    return 1
+  fi
+
+  printf '%s' "$version"
+}
+
 # Build the snapshot tree at $1 from ~/$host_dir_name.
 build_snapshot() {
   local DST="$1"

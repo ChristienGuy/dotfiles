@@ -19,12 +19,16 @@ cd "$(dirname "$0")"
 DST="./snapshot"
 build_snapshot "$DST"
 
+CLAUDE_CODE_VERSION="$(resolve_claude_version)"
+echo "claude-code: building against ${CLAUDE_CODE_VERSION}"
+
 IMAGE="${image_name}:latest"
 TAR="$(mktemp -t "${image_name}".XXXXXX.tar)"
 trap 'rm -f "$TAR"; rm -rf "$DST"' EXIT
 
 docker build \
   --build-arg "CLAUDE_CONFIG_DIR_NAME=${vm_dir_name}" \
+  --build-arg "CLAUDE_CODE_VERSION=${CLAUDE_CODE_VERSION}" \
   -t "$IMAGE" .
 
 # sbx runs in its own microVM with its own Docker daemon — it cannot see

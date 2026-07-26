@@ -140,21 +140,33 @@ ENV CHOKIDAR_USEPOLLING=true
 ENV CHOKIDAR_INTERVAL=400
 ENV WATCHMAN_DISABLE=1
 
-# claude-code — pinned. Bump CLAUDE_CODE_VERSION explicitly when upgrading.
-# Native installer only (~/.local/bin/claude). `npm install -g` would create a
-# parallel root-owned install that `claude doctor` flags as a duplicate and
-# that the agent user can't auto-update. Pinning the version arg is both
-# deterministic and bust-on-bump (Docker layer caching otherwise sticks to
-# whatever was pulled the first time the layer was built).
-ARG CLAUDE_CODE_VERSION=2.1.142
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null
 
 USER agent
 
+# claude-code — deliberately has NO default. build.sh resolves the release
+# channel to a concrete version and passes it as --build-arg; that changing
+# value is what busts the install layer when a new release lands. A default here
+# would be a trap in either form: a channel name ("latest") caches forever and
+# freezes the image at whatever it first pulled, and a hardcoded version rots —
+# the previous pin sat 70 releases behind for two months and downgraded the
+# newer claude the base image already ships.
+#
+# Declared here rather than earlier so bumping it doesn't invalidate every
+# layer below the ARG (an ARG busts cache from its declaration onward).
+ARG CLAUDE_CODE_VERSION
+
 # Native installer stages the binary at ~/.local/bin/claude with versioned
 # copies under ~/.local/share/claude/versions. Runs as `agent` so $HOME
 # resolves to /home/agent.
-RUN curl -fsSL https://claude.ai/install.sh | bash -s -- "${CLAUDE_CODE_VERSION}"
+#
+# install.sh treats an empty argument as "latest", so an unset build-arg would
+# quietly produce an unpinned image instead of failing. Reject it up front.
+# `npm install -g` is not an option: it creates a parallel root-owned install
+# that `claude doctor` flags as a duplicate and the agent user can't update.
+RUN : "${CLAUDE_CODE_VERSION:?must be set — build via build.sh, not a bare docker build}" \
+ && curl -fsSL https://claude.ai/install.sh | bash -s -- "${CLAUDE_CODE_VERSION}" \
+ && /home/agent/.local/bin/claude --version | grep -q "^${CLAUDE_CODE_VERSION} "
 
 # Ensure ~/.local/bin wins over /usr/local/share/npm-global/bin so `which claude`
 # always resolves to the native install. Without this, the base image's PATH
