@@ -24,27 +24,28 @@
     "frontend-design@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
+    "code-review@claude-plugins-official": false,
+    "feature-dev@claude-plugins-official": false,
+    "code-simplifier@claude-plugins-official": false,
     "ralph-loop@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": false,
     "figma@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": false,
     "linear@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": false,
     "security-guidance@claude-plugins-official": true,
-    "sentry@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
+    "sentry@claude-plugins-official": false,
+    "github@claude-plugins-official": false,
     "notion@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "shared@paddle-claude-plugin-marketplace": true,
+    "claude-md-management@claude-plugins-official": false,
+    "paddle-shared@paddle-claude-plugin-marketplace": true,
     "honeycomb@honeycomb-plugins": true,
     "amplitude@claude-plugins-official": true,
     "paddle-frontend@paddle-claude-plugin-marketplace": true,
-    "paddle-go-backend@paddle-claude-plugin-marketplace": true
+    "paddle-go-backend@paddle-claude-plugin-marketplace": true,
+    "paper-desktop@paper": true
   },
   "extraKnownMarketplaces": {
     "paddle-claude-plugin-marketplace": {
@@ -53,12 +54,24 @@
         "repo": "PaddleHQ/paddle-claude-plugin-marketplace"
       },
       "autoUpdate": true
+    },
+    "paper": {
+      "source": {
+        "source": "github",
+        "repo": "paper-design/agent-plugins"
+      }
     }
   },
   "outputStyle": "Coworker",
   "effortLevel": "high",
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipDangerousModePermissionPrompt": true,
   "preferredNotifChannel": "auto",
-  "skipAutoPermissionPrompt": true
+  "autoCompactEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true
 }

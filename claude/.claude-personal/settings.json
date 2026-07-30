@@ -14,6 +14,16 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude-personal/hooks/paper-relay.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -33,9 +43,18 @@
     "commit-commands@claude-plugins-official": true,
     "github@claude-plugins-official": true,
     "vercel@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true
+    "gopls-lsp@claude-plugins-official": true,
+    "paper-desktop@paper": true
   },
+  "extraKnownMarketplaces": {
+    "paper": {
+      "source": {
+        "source": "github",
+        "repo": "paper-design/agent-plugins"
+      }
+    }
+  },
+  "outputStyle": "Terse",
   "effortLevel": "high",
-  "tui": "fullscreen",
-  "outputStyle": "Terse"
+  "tui": "fullscreen"
 }
