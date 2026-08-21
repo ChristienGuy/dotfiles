@@ -13,6 +13,17 @@
             "command": "~/.claude/hooks/enforce-git-spice.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/block-comment-slop.py",
+            "timeout": 10,
+            "statusMessage": "Checking comment discipline"
+          }
+        ]
       }
     ]
   },
@@ -45,7 +56,8 @@
     "amplitude@claude-plugins-official": true,
     "paddle-frontend@paddle-claude-plugin-marketplace": true,
     "paddle-go-backend@paddle-claude-plugin-marketplace": true,
-    "paper-desktop@paper": true
+    "paper-desktop@paper": true,
+    "mattpocock-skills@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "paddle-claude-plugin-marketplace": {
@@ -62,7 +74,7 @@
       }
     }
   },
-  "outputStyle": "Coworker",
+  "outputStyle": "STE",
   "effortLevel": "high",
   "tui": "fullscreen",
   "voice": {
