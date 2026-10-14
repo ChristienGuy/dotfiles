@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/enforce-git-spice.sh"
+            "command": "~/.claude/hooks/enforce-gh-stack.sh"
           }
         ]
       },
@@ -52,7 +52,7 @@
     "notion@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": false,
     "paddle-shared@paddle-claude-plugin-marketplace": true,
-    "honeycomb@honeycomb-plugins": true,
+    "honeycomb@honeycomb-plugins": false,
     "amplitude@claude-plugins-official": true,
     "paddle-frontend@paddle-claude-plugin-marketplace": true,
     "paddle-go-backend@paddle-claude-plugin-marketplace": true,
