@@ -3,9 +3,15 @@
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
 
-# Match only where a command starts (line start, or after ; & | ( or $( plus optional VAR=x prefixes),
-# so text inside a grep pattern or a commit message does not trigger a block.
-START='(^|[;&|(]|\$\()[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*'
+# Match only at command position (also inside wrappers, `sh -c '...'`, eval, backticks),
+# so blocked text inside a grep pattern or a commit message does not trigger a block.
+SEP='(^|[;&|({!`]|\$\(|[[:space:]]-[A-Za-z]*c[[:space:]]+["'"'"']?|eval[[:space:]]+["'"'"']?)'
+WRAP='((then|do|else|elif|env|command|builtin|exec|eval|nohup|time|nice|sudo|xargs)([[:space:]]+-[^[:space:]]+)*[[:space:]]+)*'
+START="$SEP[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*$WRAP"
+# Global options before the subcommand, e.g. `git -C dir push`, `gh -R owner/repo pr create`.
+OPTS='([[:space:]]+-{1,2}[A-Za-z][A-Za-z-]*(=[^[:space:]]*)?([[:space:]]+[^-[:space:]][^[:space:]]*)?)*'
+GIT="git$OPTS[[:space:]]+"
+GH="gh$OPTS[[:space:]]+"
 
 runs() { echo "$COMMAND" | grep -qE "$START$1"; }
 
@@ -14,20 +20,20 @@ block() {
   exit 2
 }
 
-if runs 'gh[[:space:]]+pr[[:space:]]+create\b'; then
+if runs "${GH}pr[[:space:]]+create\b"; then
   block "Use \`gh stack submit --auto\` to open PRs, not \`gh pr create\`. --auto opens new PRs as drafts."
 fi
 
 # Only the human moves a PR out of draft.
-if runs 'gh[[:space:]]+pr[[:space:]]+ready\b' || echo "$COMMAND" | grep -qE 'markPullRequestReadyForReview'; then
+if runs "${GH}pr[[:space:]]+ready\b" || echo "$COMMAND" | grep -qE 'markPullRequestReadyForReview'; then
   block "Do not mark PRs ready for review. The human changes draft state."
 fi
 
 # Without --auto the interactive editor defaults new PRs to ready; --open promotes new and existing PRs.
-if runs 'gh[[:space:]]+stack[[:space:]]+(submit|link)\b' && echo "$COMMAND" | grep -qE '(^|[[:space:]])--open\b'; then
+if runs "${GH}stack$OPTS[[:space:]]+(submit|link)\b" && echo "$COMMAND" | grep -qE '(^|[[:space:]])--open\b'; then
   block "Do not pass --open to \`gh stack submit\` or \`gh stack link\`. It marks PRs ready for review. The human changes draft state."
 fi
-if runs 'gh[[:space:]]+stack[[:space:]]+submit\b' && ! echo "$COMMAND" | grep -qE '(^|[[:space:]])--auto\b'; then
+if runs "${GH}stack$OPTS[[:space:]]+submit\b" && ! echo "$COMMAND" | grep -qE '(^|[[:space:]])--auto\b'; then
   block "Run \`gh stack submit --auto\`. Without --auto, new PRs can open as ready for review."
 fi
 
@@ -36,19 +42,19 @@ if runs 'gs[[:space:]]+branch[[:space:]]+submit\b' && echo "$COMMAND" | grep -qE
   block "Do not pass --draft/--no-draft/--fill/-c to \`gs branch submit\`. Run it plain. The human changes draft state."
 fi
 
-if runs 'git[[:space:]]+checkout[[:space:]]+-b\b' || runs 'git[[:space:]]+switch[[:space:]]+(-c|--create)\b'; then
+if runs "${GIT}checkout[[:space:]]+-b\b" || runs "${GIT}switch[[:space:]]+(-c|--create)\b"; then
   block "Use \`gh stack init <branch>\` or \`gh stack add <branch>\` to create branches."
 fi
 
-if runs 'git[[:space:]]+push\b'; then
+if runs "${GIT}push\b"; then
   block "Use \`gh stack push\` or \`gh stack submit --auto\` to push, not \`git push\`."
 fi
 
-if runs 'git[[:space:]]+remote[[:space:]]+(set-url|add|remove|rm|rename)\b[^|;&]*\borigin\b'; then
+if runs "${GIT}remote[[:space:]]+(set-url|add|remove|rm|rename)\b[^|;&]*\borigin\b"; then
   block "Refusing to modify the \`origin\` remote (set-url/add/remove/rename). If this is intentional, run the command yourself."
 fi
 
-if runs 'git[[:space:]]+config\b[^|;&]*\bremote\.origin\.'; then
+if runs "${GIT}config\b[^|;&]*\bremote\.origin\."; then
   block "Refusing to modify \`remote.origin.*\` via git config. If this is intentional, run the command yourself."
 fi
 
