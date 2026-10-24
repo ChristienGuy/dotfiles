@@ -24,8 +24,8 @@ alias gpsup='git push --set-upstream origin $(git branch --show-current)'
 alias git-list-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}"'
 alias git-remove-untracked='git fetch --prune && git branch -r | awk "{print \$1}" | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk "{print \$1}" | xargs git branch -D'
 
-# Git spice
-alias gs='git-spice'
+# gh-stack
+alias gs='gh stack'
 
 # Paddle deploys (pdl) — billing-dashboard app. See dash:dev in .zsh_functions.
 alias dash:take='pdl dashboard take development --app=billing-dashboard'

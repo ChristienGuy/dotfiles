@@ -11,31 +11,16 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
  && node --version \
  && node -e "require('node:sqlite')"
 
-# git-spice (`gs`) — pinned. Bump GS_VERSION explicitly when upgrading.
-# Auth piggybacks on `gh` (already in the base image), so no token baked in.
-# openssh-client is installed here too: needed for git-over-SSH against
-# github.com. sbx >=0.28 forwards the host SSH agent into the sandbox
-# automatically (via SSH_AUTH_SOCK), so no key material ever enters the image.
-ARG GS_VERSION=v0.26.1
+# openssh-client: needed for git-over-SSH against github.com. sbx >=0.28
+# forwards the host SSH agent into the sandbox automatically (via
+# SSH_AUTH_SOCK), so no key material ever enters the image.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends bash-completion openssh-client \
       fonts-dejavu fonts-liberation fontconfig \
  && mkdir -p /etc/ssh/ssh_config.d \
  && printf 'Host github.com\n  User git\n  StrictHostKeyChecking accept-new\n' \
       > /etc/ssh/ssh_config.d/github.conf \
- && rm -rf /var/lib/apt/lists/* \
- && case "$(uname -m)" in \
-        aarch64) GS_ARCH=aarch64 ;; \
-        x86_64)  GS_ARCH=x86_64 ;; \
-        *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;; \
-    esac \
- && tmpdir=$(mktemp -d) \
- && curl -fsSL "https://github.com/abhinav/git-spice/releases/download/${GS_VERSION}/git-spice.Linux-${GS_ARCH}.tar.gz" \
-        | tar -xz -C "$tmpdir" git-spice \
- && install -m 0755 "$tmpdir/git-spice" /usr/local/bin/gs \
- && rm -rf "$tmpdir" \
- && gs --version \
- && gs shell completion bash > /etc/bash_completion.d/gs
+ && rm -rf /var/lib/apt/lists/*
 
 # gh — install from GitHub's official apt repo (cli.github.com). The base
 # image ships gh 2.46.0, which fails on `gh pr edit` because of a GraphQL
@@ -53,6 +38,27 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install -y --no-insta
  && apt-get install -y --no-install-recommends gh \
  && rm -rf /var/lib/apt/lists/* \
  && gh --version
+
+# gh-stack (`gh stack`, `gs` wrapper) — pinned. Bump GH_STACK_VERSION explicitly
+# when upgrading. Laid out by hand as a gh extension because `gh extension
+# install` needs gh auth, which only exists at runtime (GH_TOKEN from the sandbox).
+ARG GH_STACK_VERSION=v0.2.1
+RUN case "$(uname -m)" in \
+        aarch64) GH_STACK_ASSET=linux-arm64 ;; \
+        x86_64)  GH_STACK_ASSET=linux-amd64 ;; \
+        *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;; \
+    esac \
+ && extdir=/home/agent/.local/share/gh/extensions/gh-stack \
+ && mkdir -p "$extdir" \
+ && curl -fsSL -o "$extdir/gh-stack" \
+        "https://github.com/github/gh-stack/releases/download/${GH_STACK_VERSION}/${GH_STACK_ASSET}" \
+ && chmod 0755 "$extdir/gh-stack" \
+ && printf 'owner: github\nname: gh-stack\nhost: github.com\ntag: %s\nispinned: true\npath: %s/gh-stack\n' \
+        "${GH_STACK_VERSION}" "$extdir" > "$extdir/manifest.yml" \
+ && chown -R agent:agent /home/agent/.local \
+ && "$extdir/gh-stack" --help >/dev/null \
+ && printf '#!/bin/sh\nexec gh stack "$@"\n' > /usr/local/bin/gs \
+ && chmod 0755 /usr/local/bin/gs
 
 # rtk (Rust Token Killer) — pinned. Bump RTK_VERSION explicitly when upgrading.
 # CLI proxy that compresses common dev command output before it reaches Claude's
@@ -82,26 +88,6 @@ ARG WORKOS_VERSION=0.15.2
 RUN npm install -g "workos@${WORKOS_VERSION}" \
  && workos --version \
  && install -d -m 0700 -o agent -g agent /home/agent/.workos
-
-# Make git-spice reuse gh CLI's auth without prompting.
-# Stores {"type":"gh"} in a file-based stash (skipping the keyring,
-# which isn't available in container sandboxes). gs will then shell
-# out to `gh auth token` on every API call, so token rotation in gh
-# propagates automatically. Requires gh CLI to be authenticated at
-# runtime — typically via GH_TOKEN env var injected by the sandbox.
-RUN git config --system spice.secret.backend file \
- && mkdir -p /home/agent/.config/git-spice \
- && printf '%s' '{"https://github.com":{"token":"{\"type\":\"gh\"}"}}' \
-      > /home/agent/.config/git-spice/secrets.json \
- && chown -R agent:agent /home/agent/.config
-
-# git-spice reads GITHUB_TOKEN; the sandbox proxy provides GH_TOKEN. Aliasing
-# them in /etc/sandbox-persistent.sh (sourced via CLAUDE_ENV_FILE before every
-# Bash tool call, and re-exported as BASH_ENV for non-interactive children)
-# makes `gs auth status`, `gs repo sync`, `gs branch submit`, etc. work without
-# a manual `gs auth login` per sandbox.
-RUN printf '\n# git-spice reads GITHUB_TOKEN; the sandbox proxy provides GH_TOKEN.\nexport GITHUB_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}"\n' \
-      >> /etc/sandbox-persistent.sh
 
 # workos CLI: forward WORKOS_API_KEY from host (if set) and force file-based
 # credential storage (no keyring in containers).

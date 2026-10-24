@@ -12,6 +12,8 @@ START="$SEP[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*$WRAP"
 OPTS='([[:space:]]+-{1,2}[A-Za-z][A-Za-z-]*(=[^[:space:]]*)?([[:space:]]+[^-[:space:]][^[:space:]]*)?)*'
 GIT="git$OPTS[[:space:]]+"
 GH="gh$OPTS[[:space:]]+"
+# `gs` is a shell alias for `gh stack`.
+STACK="(${GH}stack|gs)"
 
 runs() { echo "$COMMAND" | grep -qE "$START$1"; }
 
@@ -30,16 +32,11 @@ if runs "${GH}pr[[:space:]]+ready\b" || echo "$COMMAND" | grep -qE 'markPullRequ
 fi
 
 # Without --auto the interactive editor defaults new PRs to ready; --open promotes new and existing PRs.
-if runs "${GH}stack$OPTS[[:space:]]+(submit|link)\b" && echo "$COMMAND" | grep -qE '(^|[[:space:]])--open\b'; then
+if runs "$STACK$OPTS[[:space:]]+(submit|link)\b" && echo "$COMMAND" | grep -qE '(^|[[:space:]])--open\b'; then
   block "Do not pass --open to \`gh stack submit\` or \`gh stack link\`. It marks PRs ready for review. The human changes draft state."
 fi
-if runs "${GH}stack$OPTS[[:space:]]+submit\b" && ! echo "$COMMAND" | grep -qE '(^|[[:space:]])--auto\b'; then
+if runs "$STACK$OPTS[[:space:]]+submit\b" && ! echo "$COMMAND" | grep -qE '(^|[[:space:]])--auto\b'; then
   block "Run \`gh stack submit --auto\`. Without --auto, new PRs can open as ready for review."
-fi
-
-# Stacks opened with git-spice before the switch to gh-stack: --draft/--no-draft/--fill/-c demote ready PRs.
-if runs 'gs[[:space:]]+branch[[:space:]]+submit\b' && echo "$COMMAND" | grep -qE '(--draft|--no-draft|--fill|[[:space:]]-c\b)'; then
-  block "Do not pass --draft/--no-draft/--fill/-c to \`gs branch submit\`. Run it plain. The human changes draft state."
 fi
 
 if runs "${GIT}checkout[[:space:]]+-b\b" || runs "${GIT}switch[[:space:]]+(-c|--create)\b"; then
