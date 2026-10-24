@@ -10,7 +10,7 @@ Each top-level directory (`zsh/`, `claude/`, `starship/`) is a **stow package** 
 Zsh config, sourced from `~/.zshrc` which lives in the repo.
 
 - **`.zshrc`** — entry point. Sources `.zsh_core`, sets PATH, then sources `~/.zshrc.local` for machine-specific stuff (not tracked).
-- **`.zsh/.zsh_core`** — main config: history, Starship, fzf, zoxide, antidote, git-spice completion, `grb-sign`, NVM.
+- **`.zsh/.zsh_core`** — main config: history, Starship, fzf, zoxide, antidote, `grb-sign`, NVM.
 - **`.zsh/.zsh_aliases`** — aliases (`cod`, `curs`, git shortcuts, branch helpers).
 - **`.zsh/.zsh_functions`** — functions (`fsb`, `fsbd`, `fslog` — fzf-based git branch helpers).
 - **`.zsh/.zsh_plugins.txt`** — antidote plugin list.
@@ -55,7 +55,7 @@ git clone git@github.com:ChristienGuy/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # 2. Install prereqs (see table below)
-brew install stow antidote git-spice starship fzf zoxide zsh-test-runner
+brew install stow antidote starship fzf zoxide zsh-test-runner
 
 # 3. Back up anything that would collide
 mv ~/.zshrc ~/.zshrc.backup 2>/dev/null || true
@@ -97,7 +97,7 @@ Anything machine-specific — tool-specific PATHs, pyenv versions, Herd/PHP conf
 |------|---------|---------|
 | **stow** | Symlink manager (this repo depends on it) | `brew install stow` |
 | **antidote** | Zsh plugin manager | `brew install antidote` |
-| **git-spice** | Stacked branches + `gs` completion | `brew install git-spice` |
+| **gh-stack** | Stacked branches/PRs (`gs` alias) | `gh extension install github/gh-stack` |
 | **starship** | Prompt | `brew install starship` |
 | **fzf** | Fuzzy finder (used by `fsb` branch picker) | `brew install fzf` |
 | **zoxide** | Smart directory jumper (`z`, `zi`) | `brew install zoxide` |

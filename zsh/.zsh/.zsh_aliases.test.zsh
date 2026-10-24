@@ -27,8 +27,8 @@ ztr test '[[ "$(alias grb)" == *"git rebase"* ]]' 'grb alias defined'
 ztr test '[[ "$(alias gst)" == *"git status"* ]]' 'gst alias defined'
 ztr test '[[ "$(alias gpsup)" == *"git push --set-upstream"* ]]' 'gpsup alias defined'
 
-# Git spice
-ztr test '[[ "$(alias gs)" == *"git-spice"* ]]' 'gs alias points to git-spice'
+# gh-stack
+ztr test '[[ "$(alias gs)" == *"gh stack"* ]]' 'gs alias points to gh stack'
 
 # Paddle deploys (pdl)
 ztr test '[[ "$(alias dash:take)" == *"pdl dashboard take development --app=billing-dashboard"* ]]' 'dash:take alias defined'
